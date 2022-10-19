@@ -20,13 +20,16 @@ if __name__ == '__main__':
         except:
             print("Warning: failed to XInitThreads()")
 
-from gnuradio import audio
-from gnuradio import blocks
-from gnuradio import gr
+from PyQt5 import Qt
+from gnuradio import qtgui
 from gnuradio.filter import firdes
+import sip
+from gnuradio import analog
+from gnuradio import blocks
+from gnuradio import filter
+from gnuradio import gr
 import sys
 import signal
-from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
@@ -69,20 +72,72 @@ class top_block(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 16000
-        self.Divisor = Divisor = 2
+        self.samp_rate = samp_rate = 32000
 
         ##################################################
         # Blocks
         ##################################################
-        self.blocks_wavfile_source_0 = blocks.wavfile_source('/Users/ecandeia/Dropbox/UFCG/Disciplinas/PDS/Aulas/Software/handel.wav', True)
-        self.audio_sink_0 = audio.sink(samp_rate, '', True)
+        self.hilbert_fc_0 = filter.hilbert_fc(2, firdes.WIN_HAMMING, 6.76)
+        self.graf_tempo_0 = qtgui.time_sink_f(
+            1024, #size
+            samp_rate, #samp_rate
+            "", #name
+            2 #number of inputs
+        )
+        self.graf_tempo_0.set_update_time(0.10)
+        self.graf_tempo_0.set_y_axis(-1, 1)
+
+        self.graf_tempo_0.set_y_label('Amplitude', "")
+
+        self.graf_tempo_0.enable_tags(True)
+        self.graf_tempo_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.graf_tempo_0.enable_autoscale(True)
+        self.graf_tempo_0.enable_grid(True)
+        self.graf_tempo_0.enable_axis_labels(True)
+        self.graf_tempo_0.enable_control_panel(False)
+        self.graf_tempo_0.enable_stem_plot(False)
+
+
+        labels = ['Atrasos', '', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(2):
+            if len(labels[i]) == 0:
+                self.graf_tempo_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.graf_tempo_0.set_line_label(i, labels[i])
+            self.graf_tempo_0.set_line_width(i, widths[i])
+            self.graf_tempo_0.set_line_color(i, colors[i])
+            self.graf_tempo_0.set_line_style(i, styles[i])
+            self.graf_tempo_0.set_line_marker(i, markers[i])
+            self.graf_tempo_0.set_line_alpha(i, alphas[i])
+
+        self._graf_tempo_0_win = sip.wrapinstance(self.graf_tempo_0.pyqwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._graf_tempo_0_win)
+        self.fundamental = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, 200, 1.0, 0, 0)
+        self.blocks_throttle_0 = blocks.throttle(gr.sizeof_float*1, samp_rate,True)
+        self.blocks_complex_to_real_0 = blocks.complex_to_real(1)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_wavfile_source_0, 0), (self.audio_sink_0, 0))
+        self.connect((self.blocks_complex_to_real_0, 0), (self.graf_tempo_0, 1))
+        self.connect((self.blocks_throttle_0, 0), (self.graf_tempo_0, 0))
+        self.connect((self.fundamental, 0), (self.blocks_throttle_0, 0))
+        self.connect((self.fundamental, 0), (self.hilbert_fc_0, 0))
+        self.connect((self.hilbert_fc_0, 0), (self.blocks_complex_to_real_0, 0))
 
 
     def closeEvent(self, event):
@@ -95,12 +150,9 @@ class top_block(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-
-    def get_Divisor(self):
-        return self.Divisor
-
-    def set_Divisor(self, Divisor):
-        self.Divisor = Divisor
+        self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+        self.fundamental.set_sampling_freq(self.samp_rate)
+        self.graf_tempo_0.set_samp_rate(self.samp_rate)
 
 
 

@@ -1,12 +1,16 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-##################################################
+
+#
+# SPDX-License-Identifier: GPL-3.0
+#
 # GNU Radio Python Flow Graph
 # Title: Geracao de sinal a partir de sua serie de Fourier
 # Author: Leocarlos Bezerra da Silva Lima
 # Description: Experimento para Laboratório de Princípios de Comunicações. Departamento de Engenharia Elétrica - DEE da Universidade Federal de Campina Grande - UFCG.
-# GNU Radio version: 3.7.13.5
-##################################################
+# GNU Radio version: 3.8.5.0
+
+from distutils.version import StrictVersion
 
 if __name__ == '__main__':
     import ctypes
@@ -16,22 +20,22 @@ if __name__ == '__main__':
             x11 = ctypes.cdll.LoadLibrary('libX11.so')
             x11.XInitThreads()
         except:
-            print "Warning: failed to XInitThreads()"
+            print("Warning: failed to XInitThreads()")
 
-from PyQt4 import Qt
+from PyQt5 import Qt
+from gnuradio import qtgui
+from gnuradio.filter import firdes
+import sip
 from gnuradio import analog
 from gnuradio import blocks
-from gnuradio import eng_notation
-from gnuradio import filter
 from gnuradio import gr
-from gnuradio import qtgui
-from gnuradio.eng_option import eng_option
-from gnuradio.filter import firdes
-from optparse import OptionParser
-import sip
 import sys
-from gnuradio import qtgui
+import signal
+from argparse import ArgumentParser
+from gnuradio.eng_arg import eng_float, intx
+from gnuradio import eng_notation
 
+from gnuradio import qtgui
 
 class Labo1_2(gr.top_block, Qt.QWidget):
 
@@ -57,8 +61,14 @@ class Labo1_2(gr.top_block, Qt.QWidget):
         self.top_layout.addLayout(self.top_grid_layout)
 
         self.settings = Qt.QSettings("GNU Radio", "Labo1_2")
-        self.restoreGeometry(self.settings.value("geometry").toByteArray())
 
+        try:
+            if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
+                self.restoreGeometry(self.settings.value("geometry").toByteArray())
+            else:
+                self.restoreGeometry(self.settings.value("geometry"))
+        except:
+            pass
 
         ##################################################
         # Variables
@@ -68,15 +78,14 @@ class Labo1_2(gr.top_block, Qt.QWidget):
         ##################################################
         # Blocks
         ##################################################
-        self.somador_0_0 = blocks.add_vff(1)
         self.somador_0 = blocks.add_vff(1)
         self.qtgui_freq_sink_x_0 = qtgui.freq_sink_f(
-        	1024, #size
-        	firdes.WIN_BLACKMAN_hARRIS, #wintype
-        	0, #fc
-        	samp_rate, #bw
-        	"", #name
-        	1 #number of inputs
+            1024, #size
+            firdes.WIN_BLACKMAN_hARRIS, #wintype
+            0, #fc
+            samp_rate, #bw
+            "", #name
+            1
         )
         self.qtgui_freq_sink_x_0.set_update_time(0.10)
         self.qtgui_freq_sink_x_0.set_y_axis(-140, 10)
@@ -88,21 +97,19 @@ class Labo1_2(gr.top_block, Qt.QWidget):
         self.qtgui_freq_sink_x_0.enable_axis_labels(True)
         self.qtgui_freq_sink_x_0.enable_control_panel(False)
 
-        if not True:
-          self.qtgui_freq_sink_x_0.disable_legend()
 
-        if "float" == "float" or "float" == "msg_float":
-          self.qtgui_freq_sink_x_0.set_plot_pos_half(not True)
+        self.qtgui_freq_sink_x_0.set_plot_pos_half(not True)
 
         labels = ['', '', '', '', '',
-                  '', '', '', '', '']
+            '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
+            1, 1, 1, 1, 1]
         colors = ["blue", "red", "green", "black", "cyan",
-                  "magenta", "yellow", "dark red", "dark green", "dark blue"]
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
-        for i in xrange(1):
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
             if len(labels[i]) == 0:
                 self.qtgui_freq_sink_x_0.set_line_label(i, "Data {0}".format(i))
             else:
@@ -112,72 +119,21 @@ class Labo1_2(gr.top_block, Qt.QWidget):
             self.qtgui_freq_sink_x_0.set_line_alpha(i, alphas[i])
 
         self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._qtgui_freq_sink_x_0_win)
-        self.hilbert_fc_0_1 = filter.hilbert_fc(2, firdes.WIN_HAMMING, 6.76)
-        self.hilbert_fc_0_0 = filter.hilbert_fc(2, firdes.WIN_HAMMING, 6.76)
-        self.hilbert_fc_0 = filter.hilbert_fc(2, firdes.WIN_HAMMING, 6.76)
-        self.harmonica_2 = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, 1000, 0.2, 0)
-        self.harmonica_1 = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, 600, -0.333, 0)
-        self.graf_tempo_0_0 = qtgui.time_sink_f(
-        	1024, #size
-        	samp_rate, #samp_rate
-        	"Erro", #name
-        	1 #number of inputs
-        )
-        self.graf_tempo_0_0.set_update_time(0.10)
-        self.graf_tempo_0_0.set_y_axis(-1, 1)
-
-        self.graf_tempo_0_0.set_y_label('Amplitude', "")
-
-        self.graf_tempo_0_0.enable_tags(-1, True)
-        self.graf_tempo_0_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
-        self.graf_tempo_0_0.enable_autoscale(True)
-        self.graf_tempo_0_0.enable_grid(True)
-        self.graf_tempo_0_0.enable_axis_labels(True)
-        self.graf_tempo_0_0.enable_control_panel(False)
-        self.graf_tempo_0_0.enable_stem_plot(False)
-
-        if not True:
-          self.graf_tempo_0_0.disable_legend()
-
-        labels = ['', '', '', '', '',
-                  '', '', '', '', '']
-        widths = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        colors = ["blue", "red", "green", "black", "cyan",
-                  "magenta", "yellow", "dark red", "dark green", "blue"]
-        styles = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        markers = [-1, -1, -1, -1, -1,
-                   -1, -1, -1, -1, -1]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
-
-        for i in xrange(1):
-            if len(labels[i]) == 0:
-                self.graf_tempo_0_0.set_line_label(i, "Data {0}".format(i))
-            else:
-                self.graf_tempo_0_0.set_line_label(i, labels[i])
-            self.graf_tempo_0_0.set_line_width(i, widths[i])
-            self.graf_tempo_0_0.set_line_color(i, colors[i])
-            self.graf_tempo_0_0.set_line_style(i, styles[i])
-            self.graf_tempo_0_0.set_line_marker(i, markers[i])
-            self.graf_tempo_0_0.set_line_alpha(i, alphas[i])
-
-        self._graf_tempo_0_0_win = sip.wrapinstance(self.graf_tempo_0_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._graf_tempo_0_0_win)
+        self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
+        self.harmonica_2 = analog.sig_source_f(samp_rate, analog.GR_SIN_WAVE, 300, 1.0, 0, 0)
+        self.harmonica_1 = analog.sig_source_f(samp_rate, analog.GR_SIN_WAVE, 200, 1.0, 0, 0)
         self.graf_tempo_0 = qtgui.time_sink_f(
-        	1024, #size
-        	samp_rate, #samp_rate
-        	"", #name
-        	2 #number of inputs
+            1024, #size
+            samp_rate, #samp_rate
+            "", #name
+            1 #number of inputs
         )
         self.graf_tempo_0.set_update_time(0.10)
         self.graf_tempo_0.set_y_axis(-1, 1)
 
         self.graf_tempo_0.set_y_label('Amplitude', "")
 
-        self.graf_tempo_0.enable_tags(-1, True)
+        self.graf_tempo_0.enable_tags(True)
         self.graf_tempo_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
         self.graf_tempo_0.enable_autoscale(True)
         self.graf_tempo_0.enable_grid(True)
@@ -185,23 +141,22 @@ class Labo1_2(gr.top_block, Qt.QWidget):
         self.graf_tempo_0.enable_control_panel(False)
         self.graf_tempo_0.enable_stem_plot(False)
 
-        if not True:
-          self.graf_tempo_0.disable_legend()
 
-        labels = ['Atrasos', '', '', '', '',
-                  '', '', '', '', '']
+        labels = ['', '', '', '', '',
+            '', '', '', '', '']
         widths = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        colors = ["blue", "red", "green", "black", "cyan",
-                  "magenta", "yellow", "dark red", "dark green", "blue"]
-        styles = [1, 1, 1, 1, 1,
-                  1, 1, 1, 1, 1]
-        markers = [-1, -1, -1, -1, -1,
-                   -1, -1, -1, -1, -1]
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
         alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
 
-        for i in xrange(2):
+
+        for i in range(1):
             if len(labels[i]) == 0:
                 self.graf_tempo_0.set_line_label(i, "Data {0}".format(i))
             else:
@@ -213,38 +168,21 @@ class Labo1_2(gr.top_block, Qt.QWidget):
             self.graf_tempo_0.set_line_alpha(i, alphas[i])
 
         self._graf_tempo_0_win = sip.wrapinstance(self.graf_tempo_0.pyqwidget(), Qt.QWidget)
-        self.top_grid_layout.addWidget(self._graf_tempo_0_win)
-        self.fundamental = analog.sig_source_f(samp_rate, analog.GR_COS_WAVE, 200, 1.0, 0)
+        self.top_layout.addWidget(self._graf_tempo_0_win)
+        self.fundamental = analog.sig_source_f(samp_rate, analog.GR_SIN_WAVE, 100, 1.0, 0, 0)
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_float*1, samp_rate,True)
-        self.blocks_sub_xx_0 = blocks.sub_ff(1)
-        self.blocks_complex_to_real_0_1 = blocks.complex_to_real(1)
-        self.blocks_complex_to_real_0_0 = blocks.complex_to_real(1)
-        self.blocks_complex_to_real_0 = blocks.complex_to_real(1)
-
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_complex_to_real_0, 0), (self.somador_0, 0))
-        self.connect((self.blocks_complex_to_real_0_0, 0), (self.somador_0, 1))
-        self.connect((self.blocks_complex_to_real_0_1, 0), (self.somador_0, 2))
-        self.connect((self.blocks_sub_xx_0, 0), (self.graf_tempo_0_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.hilbert_fc_0, 0))
-        self.connect((self.blocks_throttle_0, 0), (self.somador_0_0, 0))
+        self.connect((self.blocks_throttle_0, 0), (self.somador_0, 0))
         self.connect((self.fundamental, 0), (self.blocks_throttle_0, 0))
-        self.connect((self.harmonica_1, 0), (self.hilbert_fc_0_0, 0))
-        self.connect((self.harmonica_1, 0), (self.somador_0_0, 1))
-        self.connect((self.harmonica_2, 0), (self.hilbert_fc_0_1, 0))
-        self.connect((self.harmonica_2, 0), (self.somador_0_0, 2))
-        self.connect((self.hilbert_fc_0, 0), (self.blocks_complex_to_real_0, 0))
-        self.connect((self.hilbert_fc_0_0, 0), (self.blocks_complex_to_real_0_0, 0))
-        self.connect((self.hilbert_fc_0_1, 0), (self.blocks_complex_to_real_0_1, 0))
-        self.connect((self.somador_0, 0), (self.blocks_sub_xx_0, 0))
+        self.connect((self.harmonica_1, 0), (self.somador_0, 1))
+        self.connect((self.harmonica_2, 0), (self.somador_0, 2))
         self.connect((self.somador_0, 0), (self.graf_tempo_0, 0))
         self.connect((self.somador_0, 0), (self.qtgui_freq_sink_x_0, 0))
-        self.connect((self.somador_0_0, 0), (self.blocks_sub_xx_0, 1))
-        self.connect((self.somador_0_0, 0), (self.graf_tempo_0, 1))
+
 
     def closeEvent(self, event):
         self.settings = Qt.QSettings("GNU Radio", "Labo1_2")
@@ -256,33 +194,46 @@ class Labo1_2(gr.top_block, Qt.QWidget):
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate)
-        self.harmonica_2.set_sampling_freq(self.samp_rate)
-        self.harmonica_1.set_sampling_freq(self.samp_rate)
-        self.graf_tempo_0_0.set_samp_rate(self.samp_rate)
-        self.graf_tempo_0.set_samp_rate(self.samp_rate)
-        self.fundamental.set_sampling_freq(self.samp_rate)
         self.blocks_throttle_0.set_sample_rate(self.samp_rate)
+        self.fundamental.set_sampling_freq(self.samp_rate)
+        self.graf_tempo_0.set_samp_rate(self.samp_rate)
+        self.harmonica_1.set_sampling_freq(self.samp_rate)
+        self.harmonica_2.set_sampling_freq(self.samp_rate)
+        self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate)
+
+
+
 
 
 def main(top_block_cls=Labo1_2, options=None):
 
-    from distutils.version import StrictVersion
-    if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
+    if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
         style = gr.prefs().get_string('qtgui', 'style', 'raster')
         Qt.QApplication.setGraphicsSystem(style)
     qapp = Qt.QApplication(sys.argv)
 
     tb = top_block_cls()
+
     tb.start()
+
     tb.show()
+
+    def sig_handler(sig=None, frame=None):
+        Qt.QApplication.quit()
+
+    signal.signal(signal.SIGINT, sig_handler)
+    signal.signal(signal.SIGTERM, sig_handler)
+
+    timer = Qt.QTimer()
+    timer.start(500)
+    timer.timeout.connect(lambda: None)
 
     def quitting():
         tb.stop()
         tb.wait()
-    qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
-    qapp.exec_()
 
+    qapp.aboutToQuit.connect(quitting)
+    qapp.exec_()
 
 if __name__ == '__main__':
     main()
