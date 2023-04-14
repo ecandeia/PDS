@@ -3,7 +3,7 @@ Coletânea de códigos usados nas aulas de Processamento Digital de Sinais.
 
 Os arquivos com extensão grc devem ser abertos no Gnuradio, mas especificamente usando o gnuradio-companion.
 
-A disciplina é ministrada na UNiversidade Federal de Campina Grande, no curso de Engenharia Elétrica. 
+A disciplina é ministrada na Universidade Federal de Campina Grande, no curso de Engenharia Elétrica. 
 
 A bibliografia utilizada é Processamento Digital de Tempo Discreto. Oppenheim, Pearson. 3ª edição.
 
